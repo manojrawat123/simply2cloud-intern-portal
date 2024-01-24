@@ -1,8 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from datetime import date
+from django.core.validators import MaxValueValidator, MinValueValidator
  
-class MyUserManager(BaseUserManager):
+class InternUserManager(BaseUserManager):
     def create_user(self, email, name, phone, s2c_certified ,password=None):
         """
         Creates and saves a User with the given email, name, and phone.
@@ -39,7 +40,7 @@ class MyUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-class MyUser(AbstractBaseUser):
+class InternUser(AbstractBaseUser):
     email = models.EmailField(
         verbose_name="email address",
         max_length=255,
@@ -47,6 +48,18 @@ class MyUser(AbstractBaseUser):
     )
     name = models.CharField(max_length=255)
     phone = models.IntegerField()
+    address = models.TextField()
+    available = models.BooleanField(default=True)
+    s2c_certified = models.BooleanField(default=False)
+    priority = models.IntegerField(default=1,
+        validators = [
+            MinValueValidator(1, message="Priority must be at least 1"),
+            MaxValueValidator(10, message="Priority cannot be above 10")
+        ]
+    )
+    def __str__(self):
+        return self.intern_name
+    
     status = models.CharField(max_length=255)
     online_status = models.CharField(max_length=255)
     designation = models.CharField(max_length=255)
@@ -61,14 +74,11 @@ class MyUser(AbstractBaseUser):
         ("View", "View"),
         ("Admin", "Admin"),
         ("Staff", "Staff")
-    
     ])
-    dob = models.DateField()
-    doj = models.DateField()
-    objects = MyUserManager()
+    objects = InternUserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name", "phone", "company", "brand"]
+    REQUIRED_FIELDS = ["name", "phone","s2c_certified"]
 
     def __str__(self):
         return self.email
