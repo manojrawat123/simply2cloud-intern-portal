@@ -66,3 +66,4 @@ Jinja2==3.1.2
 json5==0.9.14
 jsonpointer==2.4
 jsonschema==4.19.
+Pillow==9.5.0
