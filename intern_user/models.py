@@ -12,10 +12,10 @@ class InternUserManager(BaseUserManager):
             raise ValueError('User must have an email address')
 
         user = self.model(
-            email=self.normalize_email(email),
-            name=name,
-            phone=phone,
-            s2c_certified= s2c_certified,
+            email = self.normalize_email(email),
+            name = name,
+            phone = phone,
+            s2c_certified = s2c_certified,
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -47,7 +47,7 @@ class InternUser(AbstractBaseUser):
         unique=True,
     )
     name = models.CharField(max_length=255)
-    phone = models.IntegerField()
+    phone = models.IntegerField(unique = True)
     address = models.TextField()
     available = models.BooleanField(default=True)
     s2c_certified = models.BooleanField(default=False)
@@ -57,29 +57,27 @@ class InternUser(AbstractBaseUser):
             MaxValueValidator(10, message="Priority cannot be above 10")
         ]
     )
-    def __str__(self):
-        return self.intern_name
-    
-    status = models.CharField(max_length=255)
-    online_status = models.CharField(max_length=255)
-    designation = models.CharField(max_length=255)
-    user_location = models.CharField(max_length=255)
+    user_type = models.CharField(max_length = 225)
+    online_status = models.CharField(max_length=255, default="Active")
+    designation = models.CharField(max_length=255,choices=[
+        ("Student", "Student"),
+        ("Intern", "Intern"),
+        ("Employed", "Employed"),
+        ("Self Employed", "Self Employed")
+    ], default = "Student")
+    user_location = models.CharField(max_length=255, null=True)
     last_login = models.DateTimeField(null=True, blank=True)
     user_create_date = models.DateTimeField(auto_now_add=True)
     is_superuser = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
-    user_type = models.CharField(max_length=225, choices=[
-        ("Caller", "Caller"),
-        ("View", "View"),
-        ("Admin", "Admin"),
-        ("Staff", "Staff")
-    ])
     objects = InternUserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["name", "phone","s2c_certified"]
 
+    def __str__(self):
+        return self.intern_name
     def __str__(self):
         return self.email
 
