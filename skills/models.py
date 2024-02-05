@@ -8,6 +8,5 @@ class Skill(models.Model):
     experience_level = models.IntegerField() 
     years_of_experience = models.FloatField()
     portfolio_link = models.URLField()
-
     def __str__(self):
         return f"{self.intern.intern_name} - {self.skill_name}"

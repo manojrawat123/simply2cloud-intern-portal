@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', 
     'intern_user',
     'skills',
-    'company'
+    'company',
+    'available_skills',
+    'jobs' 
 ]
 
 MIDDLEWARE = [

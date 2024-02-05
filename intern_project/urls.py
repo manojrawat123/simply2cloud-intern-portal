@@ -18,6 +18,8 @@ from django.urls import path
 from intern_user.views import MyLogin,UserRegistrationView, MyProfile
 from skills.views import MySkills
 from company.views import CompanyRegistrationView
+from available_skills.views import PostJobView
+from jobs.views import JobPostView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,4 +29,7 @@ urlpatterns = [
     path("company_register/",CompanyRegistrationView.as_view(), name="company-register-view"),
     path('skills/', MySkills.as_view(), name="skills" ),
     path('skills/<int:id>/', MySkills.as_view(), name="skills-by-id" ),
+    path('available-skills/', PostJobView.as_view(), name="avaliable-skills-id" ),
+    path('job-post/', JobPostView.as_view(), name="job-post" ),
+    path('job-post/<int:id>/', JobPostView.as_view(), name="job-post-get-of-company")
 ]

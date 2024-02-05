@@ -1,0 +1,33 @@
+from django.db import models
+from django.contrib.auth.models import User
+from company.models import Company
+from available_skills.models import AvailableSkill
+
+class Job(models.Model):
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    job_title = models.CharField(max_length=255)
+    skills_required = models.ManyToManyField(AvailableSkill, related_name='skills_required')
+    skills_preferred = models.ManyToManyField(AvailableSkill, related_name='skills_preffered')
+    salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    experience = models.CharField(max_length=255)
+    education = models.CharField(max_length=255)
+    student_hired = models.IntegerField(default=0)
+    location = models.CharField(max_length=255)
+    job_commute_type = models.CharField(max_length=50, choices=[
+        ('remote', 'remote'),
+        ('work_from_home', 'work_from_home'),
+        ('both', 'both'),
+    ])
+    timezone_required = models.CharField(max_length=255)
+
+    # Additional Fields
+    responsibilities = models.TextField(blank=True, null=True)
+    qualifications = models.TextField(blank=True, null=True)
+    benefits = models.TextField(blank=True, null=True)
+    application_deadline = models.DateField(blank=True, null=True)
+    posted_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.job_title

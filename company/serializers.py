@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from intern_user.models import InternUser
+from intern_user.serializers import MyUserRegisterSerializer
 from company.models import Company
 
 class MyCompanyUserSerializers(serializers.ModelSerializer):
@@ -25,6 +26,12 @@ class MyCompanyUserSerializers(serializers.ModelSerializer):
 class MyCompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company 
+        fields = "__all__"
+
+class MyCompanyGetSerializer(serializers.ModelSerializer):
+    company_user = MyUserRegisterSerializer()
+    class Meta:
+        model = Company
         fields = "__all__"
     
 

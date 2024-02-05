@@ -11,6 +11,10 @@ from intern_user.models import InternUser
 from intern_user.serializers import UserProfileSerializer
 from skills.models import Skill
 from skills.serializer import SkillsSerializer
+from company.models import Company
+from company.serializers import MyCompanySerializer, MyCompanyGetSerializer
+from available_skills.models import AvailableSkill
+from available_skills.serializer import AvailableSkillSerializer
 
 
 # Create your views here.
@@ -62,13 +66,33 @@ class MyProfile(APIView):
     renderer_classes = [UserRenderer]
     permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
-        user_details = InternUser.objects.get(id = request.user.id)
-        user_serializer = UserProfileSerializer(user_details)
+        try:
+            if (request.user.user_type == "user"):
+                user_details = InternUser.objects.get(id = request.user.id)
+                user_serializer = UserProfileSerializer(user_details)
 
-        skills = Skill.objects.filter(intern = request.user.id)
-        skills_serializer = SkillsSerializer(skills, many=True)
+                skills = Skill.objects.filter(intern = request.user.id)
+                skills_serializer = SkillsSerializer(skills, many=True)
+                return Response({"user_details": user_serializer.data, "skills_detail": skills_serializer.data}, status=status.HTTP_200_OK)  
+            elif (request.user.user_type == "company"):
+                try:
+                    company_data = Company.objects.get(company_user = request.user)
+                    company_serializer = MyCompanyGetSerializer(company_data)
+                except Exception as e:
+                    company_serializer = {"data": {"message":"No Data Of given Company"}}
+                # Aviable Skills 
+                available_skill = AvailableSkill.objects.all()
+                available_skill_serializer = AvailableSkillSerializer(available_skill, many=True)
 
-        return Response({"user_details": user_serializer.data, "skills_detail": skills_serializer.data}, status=status.HTTP_200_OK)  
+                return Response({"company_details": company_serializer.data, "aviable_skills": available_skill_serializer.data}, status=status.HTTP_200_OK)
+            
+            else:
+                return Response({"error": "Not a valid User"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        except Exception as e:
+            print(e)
+            return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)      
+        
     
 
     def put(self, request, id=None):
