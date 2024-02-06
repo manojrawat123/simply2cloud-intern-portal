@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'skills',
     'company',
     'available_skills',
-    'jobs' 
+    'jobs' ,
+    'search_slugs'
 ]
 
 MIDDLEWARE = [

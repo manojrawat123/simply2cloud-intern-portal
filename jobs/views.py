@@ -7,6 +7,9 @@ from rest_framework import status
 from jobs.serializers import JobPostSerializer
 from jobs.models import Job
 from jobs.serializers import JobGetSerializer
+from django.db.models import Q
+from search_slugs.models import SearchSlugs
+from search_slugs.serializers import SearchSlugSerializers
 
 
 class JobPostView(APIView):
@@ -15,13 +18,23 @@ class JobPostView(APIView):
         try:
             if id is not None:    
                 if (request.user.user_type == "company"):
-                    job_data = Job.objects.filter(company = id)
+                    job_data = Job.objects.filter(Q(company = id) & Q(company_user = request.user))
                     job_serializer = JobGetSerializer(job_data, many=True)
                     return Response(job_serializer.data, status=status.HTTP_200_OK)
             else:
+                # Job 
                 job_data = Job.objects.all()
                 job_serializer = JobGetSerializer(job_data, many=True)
-                return Response(job_serializer.data, status=status.HTTP_200_OK)
+                
+                # Search Title Slug 
+                search_title_data = SearchSlugs.objects.filter(~Q(job_title_slug__isnull=True))
+                search_title_slug_serailzer = SearchSlugSerializers(search_title_data , many=True)
+
+                # Search Location Slug
+                search_location_data = SearchSlugs.objects.filter(~Q(location_slug__isnull=True))
+                search_location_serializer = SearchSlugSerializers(search_location_data , many=True)
+
+                return Response({"all_jobs":job_serializer.data, "search_title_keywords": search_title_slug_serailzer.data, "search_location_slug": search_location_serializer.data}, status=status.HTTP_200_OK)
 
         except Exception as e:
             print(e)
@@ -32,6 +45,44 @@ class JobPostView(APIView):
             if (request.user.user_type == "company"):
                 job_serializer = JobPostSerializer(data=request.data)
                 if job_serializer.is_valid():
+                    try:
+                        slug_data = {
+                            "job_title_slug": request.data.get("job_title"),
+                            "location_slug": request.data.get("location")
+                        }
+                        
+                        # Try saving with job_title_slug
+                        slug_serializer = SearchSlugSerializers(data=slug_data)
+                        if slug_serializer.is_valid():
+                            slug_serializer.save()
+                        else:
+                            job_title_errors = slug_serializer.errors.get('job_title_slug', [])
+                            location_errors = slug_serializer.errors.get('location_slug', [])
+
+                            # Check if the uniqueness error occurred for job_title_slug
+                            if any(error.code == 'unique' for error in job_title_errors):
+                                # Retry saving with location_slug
+                                slug_data['job_title_slug'] = None
+                                slug_serializer = SearchSlugSerializers(data=slug_data)
+                                if slug_serializer.is_valid():
+                                    slug_serializer.save()
+                                else:
+                                    print(slug_serializer.errors)
+                            elif any(error.code == 'unique' for error in location_errors):
+                                # Retry saving with job_title_slug
+                                slug_data['location_slug'] = None
+                                slug_serializer = SearchSlugSerializers(data=slug_data)
+                                if slug_serializer.is_valid():
+                                    slug_serializer.save()
+                                else:
+                                    print(slug_serializer.errors)
+                    except Exception as e:
+                        print(e)
+                        pass
+
+                    except Exception as e:
+                        print(e)
+                        pass
                     job_serializer.save()
                     return Response({"message": "Job Posted Successfully"}, status=status.HTTP_201_CREATED)
                 else:
@@ -48,5 +99,39 @@ class JobPostView(APIView):
         else:
             return Response({"error": "method not allowed"}, status=status.HTTP_400_BAD_REQUEST)
             
+
+class JobSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id = None):
+        try:
+        
+            if (request.user.user_type == "user"):
+                location_query = request.query_params.get('location', None)
+                title_query = request.query_params.get('job_title', None)
+                if (title_query is not None and location_query is not None):
+                    print({
+                        "title_query" : title_query,
+                        "location_query":location_query 
+                           })
+                    print()
+                    job_data = Job.objects.filter(Q(job_title__icontains = title_query) & Q(location__icontains =location_query))
+                elif(title_query is None and location_query is not None):
+                    print({"location_query":location_query})
+                    job_data = Job.objects.filter(Q(location__icontains = location_query))
+                elif(title_query is not None and location_query is None):
+                    print({"title_query":title_query})
+                    job_data = Job.objects.filter(Q(job_title__icontains = title_query))
+                else:
+                    job_data = Job.objects.all()
+
+                job_serializer = JobGetSerializer(job_data, many=True)
+                    
+                return Response(job_serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "method not allowed"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return Response({"error": "Internal Server Error"}, status= status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
         

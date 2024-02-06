@@ -1,11 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User
+from intern_user.models import InternUser
 from company.models import Company
 from available_skills.models import AvailableSkill
 
 class Job(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     job_title = models.CharField(max_length=255)
+    company_user = models.ForeignKey(InternUser, on_delete=models.CASCADE)
     skills_required = models.ManyToManyField(AvailableSkill, related_name='skills_required')
     skills_preferred = models.ManyToManyField(AvailableSkill, related_name='skills_preffered')
     salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -19,7 +20,6 @@ class Job(models.Model):
         ('both', 'both'),
     ])
     timezone_required = models.CharField(max_length=255)
-
     # Additional Fields
     responsibilities = models.TextField(blank=True, null=True)
     qualifications = models.TextField(blank=True, null=True)
@@ -28,6 +28,7 @@ class Job(models.Model):
     posted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
+    
 
     def __str__(self):
         return self.job_title

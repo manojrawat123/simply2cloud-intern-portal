@@ -80,11 +80,17 @@ class MyProfile(APIView):
                     company_serializer = MyCompanyGetSerializer(company_data)
                 except Exception as e:
                     company_serializer = {"data": {"message":"No Data Of given Company"}}
+                
+
+                # User Details 
+                user_details = InternUser.objects.get(id = request.user.id)
+                user_serializer = UserProfileSerializer(user_details)
+
                 # Aviable Skills 
                 available_skill = AvailableSkill.objects.all()
                 available_skill_serializer = AvailableSkillSerializer(available_skill, many=True)
 
-                return Response({"company_details": company_serializer.data, "aviable_skills": available_skill_serializer.data}, status=status.HTTP_200_OK)
+                return Response({"company_details": company_serializer.data, "aviable_skills": available_skill_serializer.data, "user_details": user_serializer.data}, status=status.HTTP_200_OK)
             
             else:
                 return Response({"error": "Not a valid User"}, status=status.HTTP_400_BAD_REQUEST)
