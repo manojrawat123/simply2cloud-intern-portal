@@ -15,7 +15,10 @@ from company.models import Company
 from company.serializers import MyCompanySerializer, MyCompanyGetSerializer
 from available_skills.models import AvailableSkill
 from available_skills.serializer import AvailableSkillSerializer
-
+from intern_job_profile.serializers import InternJobProfileSerializer,InternJobProfileGetSerializer, InternUserJobProfileForCompanViewSerializer
+from intern_job_profile.models import InternJobProfile
+from job_categoery.models import JobCategory
+from job_categoery.serializer import AvailableJobCategoerySerializer
 
 # Create your views here.
 def get_token_for_user(user):
@@ -73,7 +76,21 @@ class MyProfile(APIView):
 
                 skills = Skill.objects.filter(intern = request.user.id)
                 skills_serializer = SkillsSerializer(skills, many=True)
-                return Response({"user_details": user_serializer.data, "skills_detail": skills_serializer.data}, status=status.HTTP_200_OK)  
+
+                # Intern User Job Profile
+                intern_job_profile = InternJobProfile.objects.filter(intern = request.user.id)
+                intern_job_profile_serializers = InternJobProfileGetSerializer(intern_job_profile, many=True)
+
+                 # Available Job Categoeries
+                available_categoery = JobCategory.objects.filter(is_active = True)
+                available_categoery_serailzer = AvailableJobCategoerySerializer(available_categoery, many=True)
+
+                return Response({
+                    "user_details": user_serializer.data, 
+                    "skills_detail": skills_serializer.data,
+                    "intern_job_profile" : intern_job_profile_serializers.data,
+                    "available_categoery": available_categoery_serailzer.data
+                    }, status=status.HTTP_200_OK)  
             elif (request.user.user_type == "company"):
                 try:
                     company_data = Company.objects.get(company_user = request.user)
@@ -90,7 +107,19 @@ class MyProfile(APIView):
                 available_skill = AvailableSkill.objects.all()
                 available_skill_serializer = AvailableSkillSerializer(available_skill, many=True)
 
-                return Response({"company_details": company_serializer.data, "aviable_skills": available_skill_serializer.data, "user_details": user_serializer.data}, status=status.HTTP_200_OK)
+                # Available Job Categoeries
+                available_categoery = JobCategory.objects.filter(is_active = True)
+                available_categoery_serailzer = AvailableJobCategoerySerializer(available_categoery, many=True)
+
+                # Intern User Job Profile
+                intern_job_profile = InternJobProfile.objects.all()
+                intern_job_profile_serializers = InternUserJobProfileForCompanViewSerializer(intern_job_profile, many=True)
+
+                return Response({"company_details": company_serializer.data, 
+                                 "aviable_skills": available_skill_serializer.data,
+                                   "user_details": user_serializer.data, 
+                                   "categoery_option": available_categoery_serailzer.data,
+                    "intern_job_profile" : intern_job_profile_serializers.data, }, status=status.HTTP_200_OK)
             
             else:
                 return Response({"error": "Not a valid User"}, status=status.HTTP_400_BAD_REQUEST)

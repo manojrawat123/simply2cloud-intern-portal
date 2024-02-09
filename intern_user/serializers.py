@@ -47,5 +47,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
   class Meta:
     model = InternUser
     fields = "__all__"
-    
+
+
+
+class InternUserJobProfileForCompanViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InternUser
+        fields = ["name","email", "phone", "address"]
     

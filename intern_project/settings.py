@@ -47,7 +47,10 @@ INSTALLED_APPS = [
     'company',
     'available_skills',
     'jobs' ,
-    'search_slugs'
+    'search_slugs',
+    'intern_job_profile',
+    'job_categoery',
+    'intern_job_application'
 ]
 
 MIDDLEWARE = [

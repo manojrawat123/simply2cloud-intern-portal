@@ -20,6 +20,8 @@ from skills.views import MySkills
 from company.views import CompanyRegistrationView
 from available_skills.views import PostJobView
 from jobs.views import JobPostView,JobSearchView
+from intern_job_profile.views import InternJobProfileView
+from intern_job_application.views import InternJobApplicationView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,5 +34,8 @@ urlpatterns = [
     path('available-skills/', PostJobView.as_view(), name="avaliable-skills-id" ),
     path('job-post/', JobPostView.as_view(), name="job-post" ),
     path('job-search/', JobSearchView.as_view(), name="job-search" ),
-    path('job-post/<int:id>/', JobPostView.as_view(), name="job-post-get-of-company")
+    path('job-post/<int:id>/', JobPostView.as_view(), name="job-post-get-of-company"),
+    path('compleate-intern-job-profile/',InternJobProfileView.as_view(), name="job-profile"),
+    path('intern-job-apply/', InternJobApplicationView.as_view(), name="apply-job"),
+    path('intern-job-apply/<int:id>/', InternJobApplicationView.as_view(), name="apply-job")
 ]
