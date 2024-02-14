@@ -1,7 +1,7 @@
 from django.db import models
 from intern_user.models import InternUser
 from jobs.models import Job
-from intern_job_profile.models import InternJobProfile
+from intern_profile_job.models import InternJobProfile
 
 
 class JobApplication(models.Model):

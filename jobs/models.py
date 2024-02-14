@@ -3,10 +3,12 @@ from intern_user.models import InternUser
 from company.models import Company
 from available_skills.models import AvailableSkill
 from job_categoery.models import JobCategory 
+from sub_categoery.models import SubCategory
 
 class Job(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     job_categoery = models.ForeignKey(JobCategory, on_delete=models.CASCADE)
+    sub_categoery = models.ForeignKey(SubCategory, on_delete= models.CASCADE, default=1)
     job_title = models.CharField(max_length=255)
     company_user = models.ForeignKey(InternUser, on_delete=models.CASCADE)
     skills_required = models.ManyToManyField(AvailableSkill, related_name='skills_required')

@@ -37,6 +37,7 @@ class InternUserManager(BaseUserManager):
             s2c_certified = s2c_certified, 
         )
         user.is_admin = True
+        user.is_superuser = True
         user.save(using=self._db)
         return user
 
@@ -47,6 +48,7 @@ class InternUser(AbstractBaseUser):
         unique=True,
     )
     name = models.CharField(max_length=255)
+    intern_name = models.CharField(max_length = 300, default = "Simply 2 Cloud")
     phone = models.IntegerField(unique = True)
     address = models.TextField()
     available = models.BooleanField(default=True)
@@ -77,7 +79,7 @@ class InternUser(AbstractBaseUser):
     REQUIRED_FIELDS = ["name", "phone","s2c_certified"]
 
     def __str__(self):
-        return self.intern_name
+        return self.name
     def __str__(self):
         return self.email
 

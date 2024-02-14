@@ -15,10 +15,13 @@ from company.models import Company
 from company.serializers import MyCompanySerializer, MyCompanyGetSerializer
 from available_skills.models import AvailableSkill
 from available_skills.serializer import AvailableSkillSerializer
-from intern_job_profile.serializers import InternJobProfileSerializer,InternJobProfileGetSerializer, InternUserJobProfileForCompanViewSerializer
-from intern_job_profile.models import InternJobProfile
+from intern_profile_job.serializers import InternJobProfileSerializer,InternJobProfileGetSerializer, InternUserJobProfileForCompanViewSerializer
+from intern_profile_job.models import InternJobProfile
 from job_categoery.models import JobCategory
 from job_categoery.serializer import AvailableJobCategoerySerializer
+from sub_categoery.models import SubCategory
+from sub_categoery.serializer import SubCategoerySerializer
+
 
 # Create your views here.
 def get_token_for_user(user):
@@ -66,6 +69,7 @@ class MyLogin(APIView):
 
 
 class MyProfile(APIView):
+
     renderer_classes = [UserRenderer]
     permission_classes = [IsAuthenticated]
     def get(self, request, format=None):
@@ -77,6 +81,12 @@ class MyProfile(APIView):
                 skills = Skill.objects.filter(intern = request.user.id)
                 skills_serializer = SkillsSerializer(skills, many=True)
 
+                # Aviable Skills 
+                skill_ids = [skill.skill_id.id for skill in skills]
+
+                available_skill = AvailableSkill.objects.exclude(id__in=skill_ids)
+                available_skill_serializer = AvailableSkillSerializer(available_skill, many=True)
+
                 # Intern User Job Profile
                 intern_job_profile = InternJobProfile.objects.filter(intern = request.user.id)
                 intern_job_profile_serializers = InternJobProfileGetSerializer(intern_job_profile, many=True)
@@ -85,11 +95,17 @@ class MyProfile(APIView):
                 available_categoery = JobCategory.objects.filter(is_active = True)
                 available_categoery_serailzer = AvailableJobCategoerySerializer(available_categoery, many=True)
 
+                # Sub Categoery
+                subcategoery_data = SubCategory.objects.all()
+                subcategoery_serializer = SubCategoerySerializer(subcategoery_data, many=True)
+
                 return Response({
                     "user_details": user_serializer.data, 
                     "skills_detail": skills_serializer.data,
                     "intern_job_profile" : intern_job_profile_serializers.data,
-                    "available_categoery": available_categoery_serailzer.data
+                    "available_categoery": available_categoery_serailzer.data,
+                    "available_sub_categoery" : subcategoery_serializer.data,
+                    "avaiable_skill" : available_skill_serializer.data
                     }, status=status.HTTP_200_OK)  
             elif (request.user.user_type == "company"):
                 try:
@@ -115,11 +131,13 @@ class MyProfile(APIView):
                 intern_job_profile = InternJobProfile.objects.all()
                 intern_job_profile_serializers = InternUserJobProfileForCompanViewSerializer(intern_job_profile, many=True)
 
-                return Response({"company_details": company_serializer.data, 
-                                 "aviable_skills": available_skill_serializer.data,
-                                   "user_details": user_serializer.data, 
-                                   "categoery_option": available_categoery_serailzer.data,
-                    "intern_job_profile" : intern_job_profile_serializers.data, }, status=status.HTTP_200_OK)
+                return Response({
+                    "company_details": company_serializer.data, 
+                    "aviable_skills": available_skill_serializer.data,
+                    "categoery_option": available_categoery_serailzer.data,
+                    "user_details": user_serializer.data, 
+                    "intern_job_profile" : intern_job_profile_serializers.data, 
+                }, status=status.HTTP_200_OK)
             
             else:
                 return Response({"error": "Not a valid User"}, status=status.HTTP_400_BAD_REQUEST)
@@ -139,3 +157,23 @@ class MyProfile(APIView):
             return Response({"message": "Data Updated Sucessfully"},status=status.HTTP_200_OK)
         else:
             return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+class UnAutProfView(APIView):
+    def get(self, request, id=None):
+        # Available Job Categoeries
+        available_categoery = JobCategory.objects.filter(is_active = True)
+        available_categoery_serailzer = AvailableJobCategoerySerializer(available_categoery, many=True)
+
+        # Aviable Skills 
+        available_skill = AvailableSkill.objects.all()
+        available_skill_serializer = AvailableSkillSerializer(available_skill, many=True)
+        
+        # Sub Categoery
+        subcategoery_data = SubCategory.objects.all()
+        subcategoery_serializer = SubCategoerySerializer(subcategoery_data, many=True)
+        return Response({
+                        "avaliable_categoery" : available_categoery_serailzer.data,
+                        "avaliable_subcategoery" : subcategoery_serializer.data,
+                        "available_skill" : available_skill_serializer.data 
+                        }, status=status.HTTP_200_OK)

@@ -13,7 +13,10 @@ from search_slugs.serializers import SearchSlugSerializers
 from job_categoery.models import JobCategory
 from job_categoery.serializer import AvailableJobCategoerySerializer
 from intern_job_application.models import JobApplication
-
+from available_skills.serializer import AvailableSkillSerializer
+from available_skills.models import AvailableSkill
+from sub_categoery.models import SubCategory
+from sub_categoery.serializer import SubCategoerySerializer
 
 class JobPostView(APIView):
     permission_classes = [IsAuthenticated]
@@ -24,28 +27,52 @@ class JobPostView(APIView):
                     job_data = Job.objects.filter(Q(company = id) & Q(company_user = request.user.id))
                     job_serializer = JobGetSerializer(job_data, many=True)
                     return Response(job_serializer.data, status=status.HTTP_200_OK)
+
             else:
-                # Job 
-                applied_job_ids = JobApplication.objects.filter(user =request.user.id).values_list('job', flat=True)
-                job_data = Job.objects.filter(~Q(id__in=applied_job_ids))
-                job_serializer = JobGetSerializer(job_data, many=True)
-                
-                # Search Title Slug 
-                search_title_data = SearchSlugs.objects.filter(~Q(job_title_slug__isnull=True))
-                search_title_slug_serailzer = SearchSlugSerializers(search_title_data , many=True)
+                if(request.user.user_type == "user"):
+                    # Job 
+                    applied_job_ids = JobApplication.objects.filter(user =request.user.id).values_list('job', flat=True)
+                    job_data = Job.objects.filter(~Q(id__in=applied_job_ids))
+                    job_serializer = JobGetSerializer(job_data, many=True)
+                    
+                    # Search Title Slug 
+                    search_title_data = SearchSlugs.objects.filter(~Q(job_title_slug__isnull=True))
+                    search_title_slug_serailzer = SearchSlugSerializers(search_title_data , many=True)
 
-                # Search Location Slug
-                search_location_data = SearchSlugs.objects.filter(~Q(location_slug__isnull=True))
-                search_location_serializer = SearchSlugSerializers(search_location_data , many=True)
+                    # Search Location Slug
+                    search_location_data = SearchSlugs.objects.filter(~Q(location_slug__isnull=True))
+                    search_location_serializer = SearchSlugSerializers(search_location_data , many=True)
 
-                # Categoery Slug
-                job_categoery = JobCategory.objects.all()
-                job_categoery_serializer = AvailableJobCategoerySerializer(job_categoery, many=True)
+                    # Categoery Slug
+                    job_categoery = JobCategory.objects.all()
+                    job_categoery_serializer = AvailableJobCategoerySerializer(job_categoery, many=True)
 
-                return Response({"all_jobs":job_serializer.data,
-                                  "search_title_keywords": search_title_slug_serailzer.data,
-                                    "search_location_slug": search_location_serializer.data,
-                                  "search_categoery" : job_categoery_serializer.data  ,}, status=status.HTTP_200_OK)
+                    # Sub Categoery
+                    subcategoery_data = SubCategory.objects.filter()
+                    subcategoery_serializer = SubCategoerySerializer(subcategoery_data, many=True)
+
+                    return Response({"all_jobs":job_serializer.data,
+                                "search_title_keywords": search_title_slug_serailzer.data,
+                                "search_location_slug": search_location_serializer.data,
+                                "search_categoery" : job_categoery_serializer.data  ,
+                                "sub_categoery" : subcategoery_serializer.data}, status=status.HTTP_200_OK)
+                elif(request.user.user_type == "company"):
+
+                    available_skill = AvailableSkill.objects.all()
+                    available_skill_serializer = AvailableSkillSerializer(available_skill, many=True)
+
+                    # Available Job Categoeries
+                    available_categoery = JobCategory.objects.filter(is_active = True)
+                    available_categoery_serailzer = AvailableJobCategoerySerializer(available_categoery, many=True)
+
+                    # Sub Categoery
+                    subcategoery_data = SubCategory.objects.filter()
+                    subcategoery_serializer = SubCategoerySerializer(subcategoery_data, many=True)
+
+                    return Response({"aviable_skills": available_skill_serializer.data,
+                                   "categoery_option": available_categoery_serailzer.data,
+                                   "sub_categoery" : subcategoery_serializer.data
+                                   })
 
         except Exception as e:
             print(e)
@@ -112,54 +139,53 @@ class JobPostView(APIView):
             
 
 class JobSearchView(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     def get(self, request, id = None):
         try:
-        
-            if (request.user.user_type == "user"):
-                location_query = request.query_params.get('location', None)
-                title_query = request.query_params.get('job_title', None)
-                category_id = request.query_params.get('category_id', None)
-                print(request.query_params)
-                print({
-                    "location_query" : location_query,
-                    "title_query" : title_query,
-                    "category_id" : category_id
-                })
-
-                
-                all_jobs = Job.objects.all()
-
-
-                # Title & location & categoery
-                if (title_query is not None and location_query is not None and category_id is not None):
-                    job_data = all_jobs.filter(Q(job_title__icontains = title_query) & Q(location__icontains =location_query) & Q(job_categoery =category_id))
-                elif(title_query is not None and location_query is None and category_id is not None):
-                    job_data = all_jobs.filter(Q(job_title__icontains = title_query) & Q(job_categoery = category_id))
-                elif(title_query is not None and location_query is None and category_id is None):
-                    job_data = all_jobs.filter(Q(job_title__icontains = title_query))
-                
-                elif(title_query is not None and location_query is not None and category_id is None):
-                    job_data = all_jobs.filter(Q(job_title__icontains = title_query) & Q(location__icontains = location_query))
-                
-                elif(title_query is None and location_query is not None and category_id is not None):
-                    job_data = all_jobs.filter(Q(location__icontains = location_query) & Q(job_categoery =category_id))
-                elif(title_query is None and location_query is not None and category_id is None):
-                    job_data = all_jobs.filter(Q(location__icontains = location_query))
-                elif(title_query is None and location_query is None and category_id is not None):
-                    job_data = all_jobs.filter(Q(job_categoery = category_id))
-                    
-                else:
-                    job_data = all_jobs.all()
-
-                job_serializer = JobGetSerializer(job_data, many=True)
-                    
-                return Response(job_serializer.data, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "method not allowed"}, status=status.HTTP_400_BAD_REQUEST)
+            # Define the available query parameters
+            query_params = ['location', 'job_title', 'job_categoery', 'sub_categoery']
+            # Create a dictionary to store the filters
+            filters = {}
+            # Iterate through the query parameters and add filters if they exist
+            for param in query_params:
+                param_value = request.query_params.get(param)
+                if param_value is not None:
+                    filters[param] = param_value
+            job_data = Job.objects.filter(**filters) if filters else Job.objects.all()
+            job_serializer = JobGetSerializer(job_data, many=True)
+            
+            return Response(job_serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response({"error": "Internal Server Error"}, status= status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
         
+class JobsUnAuthGetView(APIView):
+    def get(self, request, id = None):     
+        # Job 
+        applied_job_ids = JobApplication.objects.filter(user =request.user.id).values_list('job', flat=True)
+        job_data = Job.objects.filter(~Q(id__in=applied_job_ids))
+        job_serializer = JobGetSerializer(job_data, many=True)
+        
+        # Search Title Slug 
+        search_title_data = SearchSlugs.objects.filter(~Q(job_title_slug__isnull=True))
+        search_title_slug_serailzer = SearchSlugSerializers(search_title_data , many=True)
+
+        # Search Location Slug
+        search_location_data = SearchSlugs.objects.filter(~Q(location_slug__isnull=True))
+        search_location_serializer = SearchSlugSerializers(search_location_data , many=True)
+
+        # Categoery Slug
+        job_categoery = JobCategory.objects.all()
+        job_categoery_serializer = AvailableJobCategoerySerializer(job_categoery, many=True)
+
+        # Sub Categoery
+        subcategoery_data = SubCategory.objects.filter()
+        subcategoery_serializer = SubCategoerySerializer(subcategoery_data, many=True)
+
+        return Response({"all_jobs":job_serializer.data,
+                    "search_title_keywords": search_title_slug_serailzer.data,
+                    "search_location_slug": search_location_serializer.data,
+                    "search_categoery" : job_categoery_serializer.data  ,
+                    "sub_categoery" : subcategoery_serializer.data}, status=status.HTTP_200_OK)
