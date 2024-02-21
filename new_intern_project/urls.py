@@ -20,19 +20,28 @@ from skills.views import MySkills
 from company.views import CompanyRegistrationView
 from available_skills.views import PostJobView
 from jobs.views import JobPostView,JobSearchView,JobsUnAuthGetView
-from intern_profile_job.views import InternJobProfileView, InternJobUnAuthCompanyViewSearch
+from intern_profile_job.views import InternJobProfileView, InternJobUnAuthCompanyViewSearch,AuthCompanyUserSearchView
 from intern_job_application.views import InternJobApplicationView
+from django.conf.urls.static import static
+from django.conf import settings
+from intern_experience.views import InternExperienceView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("login/", MyLogin.as_view(), name="login"),
     path("register/", UserRegistrationView.as_view(), name="register"),
     path('profile/', MyProfile.as_view(), name="profile" ),
+
     # Un Authorize 
     path('home-unauth/', UnAutProfView.as_view(), name="home-un-auth-view"),
     path('intern-unauth-search/', InternJobUnAuthCompanyViewSearch.as_view(), name="home-un-auth-view"),
-    path('job-unauth-search/', JobsUnAuthGetView.as_view(), name="home-un-auth-view"),
-    
+    path('intern-unauth-search/<int:id>/', InternJobUnAuthCompanyViewSearch.as_view(), name="home-un-auth-view-id"),
+    path('job-unauth-search/', JobsUnAuthGetView.as_view(), name="home-un-auth-view"),    
+
+    path('intern-auth-search/', AuthCompanyUserSearchView.as_view(), name="home-un-auth-view"),
+    path('intern-auth-search/<int:id>/', AuthCompanyUserSearchView.as_view(), name="home-un-auth-view-id"),
+
     path("company_register/",CompanyRegistrationView.as_view(), name="company-register-view"),
     path('skills/', MySkills.as_view(), name="skills" ),
     path('skills/<int:id>/', MySkills.as_view(), name="skills-by-id" ),
@@ -41,6 +50,9 @@ urlpatterns = [
     path('job-search/', JobSearchView.as_view(), name="job-search" ),
     path('job-post/<int:id>/', JobPostView.as_view(), name="job-post-get-of-company"),
     path('compleate-intern-job-profile/',InternJobProfileView.as_view(), name="job-profile"),
+    path('compleate-intern-job-profile/<int:id>/',InternJobProfileView.as_view(), name="job-profile-update"),
     path('intern-job-apply/', InternJobApplicationView.as_view(), name="apply-job"),
-    path('intern-job-apply/<int:id>/', InternJobApplicationView.as_view(), name="apply-job")
-]
+    path('intern-job-apply/<int:id>/', InternJobApplicationView.as_view(), name="apply-job"),
+    path('intern-experience/', InternExperienceView.as_view(), name="add-intern-xperience"),
+    path('intern-experience/<int:id>/', InternExperienceView.as_view(), name="edit-or-delete-intern-xperience"),
+] + static(settings.MEDIA_URL, document_root= settings.MEDIA_ROOT)

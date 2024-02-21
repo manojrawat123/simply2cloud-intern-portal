@@ -30,7 +30,6 @@ class JobPostView(APIView):
 
             else:
                 if(request.user.user_type == "user"):
-                    # Job 
                     applied_job_ids = JobApplication.objects.filter(user =request.user.id).values_list('job', flat=True)
                     job_data = Job.objects.filter(~Q(id__in=applied_job_ids))
                     job_serializer = JobGetSerializer(job_data, many=True)

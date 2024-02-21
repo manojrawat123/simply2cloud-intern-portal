@@ -1,10 +1,10 @@
 from rest_framework import serializers 
-from intern_user.serializers import InternUserJobProfileForCompanViewSerializer
+from intern_user.serializers import InternUserDetailCompanyViewSerializer
 from intern_job_application.models import JobApplication
 from jobs.serializers import JobGetSerializer
 
 class InternJobApplyGetSerializer(serializers.ModelSerializer):
-    user = InternUserJobProfileForCompanViewSerializer()
+    user = InternUserDetailCompanyViewSerializer()
     job = JobGetSerializer()
     class Meta:
         model =  JobApplication

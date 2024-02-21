@@ -50,8 +50,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 
-class InternUserJobProfileForCompanViewSerializer(serializers.ModelSerializer):
+class InternUserDetailCompanyViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = InternUser
-        fields = ["name","email", "phone", "address"]
+        fields = ["id","name"]
+
+class InternAuthCompanyUserViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InternUser
+        fields = ["id","name","email", "phone", "address"]
     

@@ -1,7 +1,11 @@
+
 from rest_framework import serializers 
 from intern_profile_job.models import InternJobProfile
 from job_categoery.serializer import AvailableJobCategoerySerializer
-from intern_user.serializers import InternUserJobProfileForCompanViewSerializer 
+from sub_categoery.serializer import SubCategoerySerializer
+from intern_user.serializers import InternUserDetailCompanyViewSerializer , InternAuthCompanyUserViewSerializer
+from skills.serializer import SkillsSerializer
+
 
 class InternJobProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,7 +21,19 @@ class InternJobProfileGetSerializer(serializers.ModelSerializer):
 
 class InternUserJobProfileForCompanViewSerializer(serializers.ModelSerializer):
     job_categoery = AvailableJobCategoerySerializer()
-    intern = InternUserJobProfileForCompanViewSerializer()
+    intern = InternUserDetailCompanyViewSerializer()
+    skills = SkillsSerializer(many=True)
+    sub_categoery = SubCategoerySerializer()
+    class Meta:
+        model = InternJobProfile
+        exclude = ['portfolio_link', 'linkedin_profile', 'github_profile']
+
+class InternAuthenticatedCompanyProfileCompanyViewSerializer(serializers.ModelSerializer):
+    job_categoery = AvailableJobCategoerySerializer()
+    sub_categoery = SubCategoerySerializer()
+    intern = InternAuthCompanyUserViewSerializer()
+    skills = SkillsSerializer(many=True)
     class Meta:
         model = InternJobProfile
         fields = "__all__"
+    

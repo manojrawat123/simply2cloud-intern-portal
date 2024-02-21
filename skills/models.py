@@ -9,7 +9,9 @@ class Skill(models.Model):
     skill_name = models.CharField(max_length=255)
     experience_level = models.IntegerField(default = 9) 
     years_of_experience = models.FloatField(default = 1)
-    
+    user_image = models.ImageField(upload_to='job_profiles/', null=True, blank=True)
+ 
     portfolio_link = models.URLField()
     def __str__(self):
         return f"{self.intern.intern_name} - {self.skill_name}"
+ 

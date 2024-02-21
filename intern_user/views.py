@@ -15,12 +15,14 @@ from company.models import Company
 from company.serializers import MyCompanySerializer, MyCompanyGetSerializer
 from available_skills.models import AvailableSkill
 from available_skills.serializer import AvailableSkillSerializer
-from intern_profile_job.serializers import InternJobProfileSerializer,InternJobProfileGetSerializer, InternUserJobProfileForCompanViewSerializer
+from intern_profile_job.serializers import InternJobProfileSerializer,InternAuthenticatedCompanyProfileCompanyViewSerializer, InternUserJobProfileForCompanViewSerializer
 from intern_profile_job.models import InternJobProfile
 from job_categoery.models import JobCategory
 from job_categoery.serializer import AvailableJobCategoerySerializer
 from sub_categoery.models import SubCategory
 from sub_categoery.serializer import SubCategoerySerializer
+from intern_experience.models import JobExperience
+from intern_experience.serializers import InternExperienceGetSerializer
 
 
 # Create your views here.
@@ -89,7 +91,7 @@ class MyProfile(APIView):
 
                 # Intern User Job Profile
                 intern_job_profile = InternJobProfile.objects.filter(intern = request.user.id)
-                intern_job_profile_serializers = InternJobProfileGetSerializer(intern_job_profile, many=True)
+                intern_job_profile_serializers = InternAuthenticatedCompanyProfileCompanyViewSerializer(intern_job_profile, many=True)
 
                  # Available Job Categoeries
                 available_categoery = JobCategory.objects.filter(is_active = True)
@@ -99,13 +101,18 @@ class MyProfile(APIView):
                 subcategoery_data = SubCategory.objects.all()
                 subcategoery_serializer = SubCategoerySerializer(subcategoery_data, many=True)
 
+                # Experience Details
+                user_experience_data = JobExperience.objects.filter(user = request.user.id)
+                user_experience_serializer = InternExperienceGetSerializer(user_experience_data, many= True)
+                
                 return Response({
                     "user_details": user_serializer.data, 
                     "skills_detail": skills_serializer.data,
                     "intern_job_profile" : intern_job_profile_serializers.data,
                     "available_categoery": available_categoery_serailzer.data,
                     "available_sub_categoery" : subcategoery_serializer.data,
-                    "avaiable_skill" : available_skill_serializer.data
+                    "avaiable_skill" : available_skill_serializer.data,
+                    "experience_details" : user_experience_serializer.data,
                     }, status=status.HTTP_200_OK)  
             elif (request.user.user_type == "company"):
                 try:

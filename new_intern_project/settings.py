@@ -29,6 +29,21 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+STATIC_URL = 'static/'
+STATIC_FILES_DIRS = [BASE_DIR /  "static"]
+STATIC_ROOT = 'staticfiles'
+AUTH_USER_MODEL = 'myuser.MyUser'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Email SetUp
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER ='positive.mind.123456789@gmail.com'
+EMAIL_HOST_PASSWORD = "vdhqzwyeefhsfzxs"
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 # Application definition
 
@@ -54,6 +69,7 @@ INSTALLED_APPS = [
     'intern_profile_job',
     'job_profile_slugs',
     'engagement',
+    'intern_experience'
 ]
 
 MIDDLEWARE = [
