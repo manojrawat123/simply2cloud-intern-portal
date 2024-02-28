@@ -23,6 +23,11 @@ from sub_categoery.models import SubCategory
 from sub_categoery.serializer import SubCategoerySerializer
 from intern_experience.models import JobExperience
 from intern_experience.serializers import InternExperienceGetSerializer
+from django.core.mail import EmailMessage
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 
 # Create your views here.
@@ -39,35 +44,98 @@ class UserRegistrationView(APIView):
     renderer_classes = [UserRenderer]
     def post(self, request, format=None):
         serializer = MyUserSerializers(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        email = request.data.get("email")
+        domain_name = request.data.get("url")
+        mail_subject = "Please activate account"
+        if serializer.is_valid():
             data = serializer.save()
-            current_user = InternUser.objects.get(email = request.data.get("email"))
+            current_user = InternUser.objects.get(email = email)
             current_user.user_type = "user"
-            current_user.is_active = True
+            # current_user.is_active = True
             current_user.save()
-            return Response({"msg": "Registration Sucessfully"})
-        return Response({"error": "Invalid Data" }, status=status.HTTP_400_BAD_REQUEST)
+            try:
+                userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
+                token = default_token_generator.make_token(current_user)
+                message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
+                email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
+                email.send()
+            except Exception as e:
+                print(e)
+            return Response({"message": "Registration Successfully Verify link Send to Your Email"})
+        else:
+            try:
+                current_user = InternUser.objects.get(Q(email = email))
+                if current_user is not None:
+                    if current_user.is_active:
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
+                        token = default_token_generator.make_token(current_user)
+                        message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
+                        email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
+                        email.send()
+                    return Response({"message": "Registration Successfully Verify link Send to Your Email"})
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            except Exception as e:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     
+class VerifybyEmail(APIView):
+    def post(self , request, userid_encode = None,token = None):
+        activate = request.data.get("activate")
+        
+        pk= urlsafe_base64_decode(userid_encode)
+        user= InternUser.objects.get(pk= pk)
+        try:
+            if default_token_generator.check_token(user,token):
+                user.is_active = activate
+                user.save()
+                return Response({"message": "Registration Sucessfully"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error" : "Not Authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            print(e)
+            return Response({"error" : "Internal Server Error"}, status = status.HTTP_500_INTERNAL_SERVER_ERROR) 
 
         
     
 class MyLogin(APIView):
     renderer_classes = [UserRenderer]
     def post(self, request, format = None):
-        serializers = MyUserLoginSerializer(data=request.data)
-        if serializers.is_valid(raise_exception=True):
-            email = serializers.data.get("email")
-            password = serializers.data.get("password")
-            user = authenticate(email = email, password = password)
-            if user is not None:
-                token = get_token_for_user(user)
-                return Response({'token': token,"user_type": user.user_type, 'msg': "User Login Sucessfully"})
+        try:
+            serializers = MyUserLoginSerializer(data=request.data)
+            if serializers.is_valid(raise_exception=True):
+                email = serializers.data.get("email")
+                password = serializers.data.get("password")
+                user = authenticate(email = email, password = password)
+                if user is not None:
+                    token = get_token_for_user(user)
+                    return Response({'token': token,"user_type": user.user_type, 'msg': "User Login Sucessfully"})
+                else:
+                    try:
+                        user_e = InternUser.objects.get(email = email)
+                        if (user_e):
+                            email = request.data.get("email")
+                            domain_name = request.data.get("url")
+                            mail_subject = "Please activate account" 
+                            userid_encode = urlsafe_base64_encode(force_bytes(user_e.pk))
+                            token = default_token_generator.make_token(user_e)
+                            message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
+                            email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
+                            email.send()
+                            return Response({"error" : "Verify Your Email"}, status=status.HTTP_401_UNAUTHORIZED)
+                        else:
+                            return Response({"error" : "Email Not Exists"}, status=status.HTTP_400_BAD_REQUEST) 
+                    except Exception as e:
+                        return Response({"error" : "Email Not Exists"}, status=status.HTTP_400_BAD_REQUEST)     
+        
+                    # Response({ "error": "Invalid Data" }, status=status.HTTP_401_UNAUTHORIZED)
             else:
-                Response({ "error": "Invalid Data" }, status=status.HTTP_401_UNAUTHORIZED)
-            if user == None:
-                return Response({"error": "No User Found"}, status = status.HTTP_400_BAD_REQUEST)
-        else:
-            Response({"error": "Invalid Data"}, status=status.HTTP_400_BAD_REQUEST)
+                Response({"error": "Please data In Correct Foramt"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error" : "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class MyProfile(APIView):

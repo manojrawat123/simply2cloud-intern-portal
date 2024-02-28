@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from intern_user.views import MyLogin,UserRegistrationView, MyProfile,UnAutProfView
+from intern_user.views import MyLogin,UserRegistrationView, MyProfile,UnAutProfView,VerifybyEmail
 from skills.views import MySkills
 from company.views import CompanyRegistrationView
 from available_skills.views import PostJobView
@@ -32,6 +32,7 @@ urlpatterns = [
     path("login/", MyLogin.as_view(), name="login"),
     path("register/", UserRegistrationView.as_view(), name="register"),
     path('profile/', MyProfile.as_view(), name="profile" ),
+    path('accounts/activate/<userid_encode>/<token>/', VerifybyEmail.as_view(), name="verify email"),
 
     # Un Authorize 
     path('home-unauth/', UnAutProfView.as_view(), name="home-un-auth-view"),

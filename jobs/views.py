@@ -87,7 +87,6 @@ class JobPostView(APIView):
                             "job_title_slug": request.data.get("job_title"),
                             "location_slug": request.data.get("location")
                         }
-                        
                         # Try saving with job_title_slug
                         slug_serializer = SearchSlugSerializers(data=slug_data)
                         if slug_serializer.is_valid():
@@ -95,7 +94,6 @@ class JobPostView(APIView):
                         else:
                             job_title_errors = slug_serializer.errors.get('job_title_slug', [])
                             location_errors = slug_serializer.errors.get('location_slug', [])
-
                             # Check if the uniqueness error occurred for job_title_slug
                             if any(error.code == 'unique' for error in job_title_errors):
                                 # Retry saving with location_slug
@@ -116,10 +114,6 @@ class JobPostView(APIView):
                     except Exception as e:
                         print(e)
                         pass
-
-                    except Exception as e:
-                        print(e)
-                        pass
                     job_serializer.save()
                     return Response({"message": "Job Posted Successfully"}, status=status.HTTP_201_CREATED)
                 else:
@@ -135,7 +129,22 @@ class JobPostView(APIView):
             pass
         else:
             return Response({"error": "method not allowed"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+    def delete(self, request, id = None):
+        if id is None or request.user.user_type != "company":
+            return Response({"error" : "Method Not Allowed"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if (request.user.user_type == "company"):
+                jobs = Job.objects.filter(company_user = request.user.id)
+                try:
+                    selected_job = jobs.get(id = id)
+                    selected_job.delete()
+                    return Response({"message" : "Deleted Successfully"}, status=status.HTTP_200_OK)
+                except Exception as e:
+                    print(e)
+                    return Response({"error" : "No Jobs Found"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class JobSearchView(APIView):
     # permission_classes = [IsAuthenticated]
@@ -155,7 +164,6 @@ class JobSearchView(APIView):
             
             return Response(job_serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
-            print(e)
             return Response({"error": "Internal Server Error"}, status= status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

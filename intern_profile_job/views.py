@@ -9,6 +9,7 @@ from intern_profile_job.models import InternJobProfile
 from intern_profile_job.serializers import InternJobProfileSerializer, InternUserJobProfileForCompanViewSerializer,InternAuthenticatedCompanyProfileCompanyViewSerializer
 from intern_experience.models import JobExperience
 from intern_experience.serializers import InternExperienceGetSerializer
+from rest_framework.exceptions import ValidationError
 
 class InternJobProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -20,9 +21,12 @@ class InternJobProfileView(APIView):
                 return Response({"message": "Profile Added Sucessfully"}, status=status.HTTP_201_CREATED)
             else:
                 return Response(intern_job_profile_serializers.errors , status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            print(e)
-            return Response({"Internal Server Error"} , status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # print(f"An error occurred: {e}")
+            return Response({"Internal Server Error": "An error occurred while processing your request."}, 
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     def put(self, request, id = None):
         if id is None:
@@ -30,13 +34,16 @@ class InternJobProfileView(APIView):
 
         else:
             try:
-
+                print("Mai Chala")
                 intern_profile_all = InternJobProfile.objects.filter(intern = request.user.id)
                 intern_profile = intern_profile_all.get(id = id)
                 intern_profile_serializer = InternJobProfileSerializer(intern_profile, data=request.data, partial=True)
-
+                if intern_profile_serializer.is_valid():
+                    intern_profile_serializer.save()
+                    return Response({"message" : "User Updated Successfully"}, status=status.HTTP_201_CREATED)
+                else:
+                    return Response(intern_profile_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             except Exception as e:
-                print(e)
                 return Response({"Internal Server Error"} , status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

@@ -13,11 +13,9 @@ class InternJobApplicationView(APIView):
     def get(self, request, id = None):
         try:
             if (request.user.user_type == "user"):
-
                 intern_applied_jobs = JobApplication.objects.filter(user = request.user.id)
                 intern_job_apply_serializer = InternJobApplyGetSerializer(intern_applied_jobs,many=True)
-
-                return Response(intern_job_apply_serializer, status=status.HTTP_200_OK)
+                return Response(intern_job_apply_serializer.data, status=status.HTTP_200_OK)
             elif(request.user.user_type == "company"):
                 status_params = request.query_params.get("status")
                 if status_params is None:
