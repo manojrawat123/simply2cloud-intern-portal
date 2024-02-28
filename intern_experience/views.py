@@ -13,7 +13,6 @@ class InternExperienceView(APIView):
         if (request.user.user_type == "user"):
              
             intern_job_experience = InternExperienceSerializer(data=request.data)
-            print(request.data)
             try:
                 if intern_job_experience.is_valid():
                     intern_job_experience.save()
