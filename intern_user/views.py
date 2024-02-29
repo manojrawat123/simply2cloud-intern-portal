@@ -51,9 +51,9 @@ class UserRegistrationView(APIView):
             data = serializer.save()
             current_user = InternUser.objects.get(email = email)
             current_user.user_type = "user"
-            current_user.is_active = True
-            current_user.is_superuser = True
-            current_user.is_admin = True
+            # current_user.is_active = True
+            # current_user.is_superuser = True
+            # current_user.is_admin = True
             current_user.save()
             try:
                 userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
