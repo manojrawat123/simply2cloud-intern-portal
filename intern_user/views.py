@@ -39,6 +39,18 @@ def get_token_for_user(user):
         'access': str(refresh.access_token),
     }
 
+def EmailVerifyFunc(current_user, domain_name):
+    try:
+        mail_subject = "Please activate account"
+        userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
+        token = default_token_generator.make_token(current_user)
+        message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
+        user_email = current_user.email
+        email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[user_email])
+        email.send()
+    except Exception as e:
+        print(e)
+
 # Create Your Registration User Code Start Here
 class UserRegistrationView(APIView):
     renderer_classes = [UserRenderer]
@@ -46,23 +58,11 @@ class UserRegistrationView(APIView):
         serializer = MyUserSerializers(data=request.data)
         email = request.data.get("email")
         domain_name = request.data.get("url")
-        mail_subject = "Please activate account"
         if serializer.is_valid():
             data = serializer.save()
             current_user = InternUser.objects.get(email = email)
-            current_user.user_type = "user"
-            # current_user.is_active = True
-            # current_user.is_superuser = True
-            # current_user.is_admin = True
             current_user.save()
-            try:
-                userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
-                token = default_token_generator.make_token(current_user)
-                message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
-                email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
-                email.send()
-            except Exception as e:
-                print(e)
+            EmailVerifyFunc(current_user, domain_name)
             return Response({"message": "Registration Successfully Verify link Send to Your Email"})
         else:
             try:
@@ -71,12 +71,17 @@ class UserRegistrationView(APIView):
                     if current_user.is_active:
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     else:
-                        userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
-                        token = default_token_generator.make_token(current_user)
-                        message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
-                        email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
-                        email.send()
-                    return Response({"message": "Registration Successfully Verify link Send to Your Email"})
+                        
+                        EmailVerifyFunc(current_user, domain_name)
+                        current_user.delete()
+                        n_serializer = MyUserSerializers(data=request.data)
+                        if n_serializer.is_valid():
+                            n_serializer.save()
+                            new_user = InternUser.objects.get(Q(email = email))
+                            new_user.user_type = "user"
+                            return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)
+                        else:
+                            return Response(n_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
