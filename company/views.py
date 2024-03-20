@@ -73,7 +73,7 @@ class CompanyRegistrationView(APIView):
                         c_serializer = MyCompanyUserSerializers(data=user_data)
                         if c_serializer.is_valid():
                             c_serializer.save()
-                            new_user = InternUser.objects.get(Q(email = request.data["email"]))
+                            current_user = InternUser.objects.get(Q(email = request.data["email"]) | Q(phone = request.data["phone"]))
                             new_user.user_type = "company"
                             new_user.save()
                             EmailVerifyFunc(new_user, domain_name)
