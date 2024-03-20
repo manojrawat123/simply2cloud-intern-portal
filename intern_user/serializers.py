@@ -20,7 +20,6 @@ class MyUserSerializers(serializers.ModelSerializer):
     def create(self, validate_data):
         validate_data.pop('password2')
         return InternUser.objects.create_user(**validate_data)
-    
 
 class MyUserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -59,4 +58,5 @@ class InternAuthCompanyUserViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = InternUser
         fields = ["id","name","email", "phone", "address"]
-    
+
+# Z6SAGCK6X5V2Y6P72AF14ZAM

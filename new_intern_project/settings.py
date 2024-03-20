@@ -189,8 +189,6 @@ EMAIL_HOST_PASSWORD = "ixgylohrhbjvufcn"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-
-
 PASSWORD_RESET_TIMEOUT=900        
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",

@@ -31,10 +31,8 @@ class InternJobProfileView(APIView):
     def put(self, request, id = None):
         if id is None:
             return Response({"error" : "Method Not Allowed"}, status=status.HTTP_400_BAD_REQUEST)
-
         else:
             try:
-                print("Mai Chala")
                 intern_profile_all = InternJobProfile.objects.filter(intern = request.user.id)
                 intern_profile = intern_profile_all.get(id = id)
                 intern_profile_serializer = InternJobProfileSerializer(intern_profile, data=request.data, partial=True)
@@ -53,8 +51,6 @@ class InternJobUnAuthCompanyViewSearch(APIView):
         if(id is not None):
             intern_job_profile = InternJobProfile.objects.get(id = id)
             intern_job_profile_serializers = InternUserJobProfileForCompanViewSerializer(intern_job_profile)
-
-            
             # intern Experience Details
             user_id = intern_job_profile.intern.id
             user_experience_data = JobExperience.objects.filter(user = user_id)
