@@ -37,7 +37,7 @@ from sib_api_v3_sdk.rest import ApiException
 def EmailVerifyFunc(current_user, domain_name):
 
     configuration = sib_api_v3_sdk.Configuration()
-
+    # Paste line here
     api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
     subject = "Verification Email from Intern Monster"
     userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
@@ -191,8 +191,9 @@ class MyLogin(APIView):
                             userid_encode = urlsafe_base64_encode(force_bytes(user_e.pk))
                             token = default_token_generator.make_token(user_e)
                             message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
-                            email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
-                            email.send()
+                            # email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
+                            # email.send()
+                            EmailVerifyFunc(user_e, domain_name=domain_name)
                             return Response({"error" : "Verify Your Email"}, status=status.HTTP_401_UNAUTHORIZED)
                         else:
                             return Response({"error" : "Email Not Exists"}, status=status.HTTP_400_BAD_REQUEST) 

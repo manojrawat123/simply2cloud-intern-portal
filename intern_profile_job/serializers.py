@@ -26,7 +26,7 @@ class InternUserJobProfileForCompanViewSerializer(serializers.ModelSerializer):
     sub_categoery = SubCategoerySerializer()
     class Meta:
         model = InternJobProfile
-        exclude = ['portfolio_link', 'linkedin_profile', 'github_profile']
+        exclude = ['portfolio_link', 'linkedin_profile']
 
 class InternAuthenticatedCompanyProfileCompanyViewSerializer(serializers.ModelSerializer):
     job_categoery = AvailableJobCategoerySerializer()
