@@ -35,74 +35,16 @@ import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 
 def EmailVerifyFunc(current_user, domain_name):
-
-    configuration = sib_api_v3_sdk.Configuration()
-    # Paste line here
-    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
-    subject = "Verification Email from Intern Monster"
-    userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
-    token = default_token_generator.make_token(current_user)
-    message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
-    html_content =html_content = f'''<html>
-<head>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }}
-        .container {{
-         
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }}
-        h3 {{
-            color: #333333;
-        }}
-        p {{
-            color: #666666;
-        }}
-        a {{
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 5px;
-        }}
-        a:hover {{
-            background-color: #0056b3;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h3>Dear Intern,</h3>
-        <p>Please click on the below link to verify your email</p>
-        <p><a href="{message}" style="color: #ffffff;">Click To Verify</a></p>
-        <p>Thanks & Regards,</p>
-        <p>Customer Care</p>
-        <p>Intern Monster</p>
-    </div>
-</body>
-</html>'''
-
-    sender = {"name":"Intern Monster","email":"enquiry@simply2cloud.com"}
-    to = [{"email": current_user.email,"name": current_user.name}]
-    cc = [{"email":"enquiry@simply2cloud.com","name":"Intern Monster"}]
-    bcc = [{"name":"John Doe","email":"positive.mind.123456789@gmail.com"}]
-    reply_to = {"email":"enquiry@simply2cloud.com","name":"Intern Monster"}
-    headers = {"Some-Custom-Name":"unique-id-1234"}
-    params = {"parameter":"My param value","subject":"New Subject"}
-    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(to=to, bcc=bcc, cc=cc, reply_to=reply_to, headers=headers, html_content=html_content, sender=sender, subject=subject)
     try:
-        api_response = api_instance.send_transac_email(send_smtp_email)
-        print(api_response)
-    except ApiException as e:
-        print("Exception when calling SMTPApi->send_transac_email: %s\n" % e)
+        userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
+        token = default_token_generator.make_token(current_user)
+        message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
+        email_sender = EmailMessage("Intern Monster Verification Email", message, 'simply2cloud@gmail.com',[current_user.email])
+        email_sender.send()
+    except Exception as e:
+        print(e)
+        email_sender = EmailMessage("Error In Intern Monster", f"{e}", 'positive.mind.123456789@gmail.com', ['positive.mind.123456789@gmail.com'])
+        email_sender.send()
 
 def get_token_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -110,7 +52,6 @@ def get_token_for_user(user):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
-
 
 # Create Your Registration User Code Start Here
 class UserRegistrationView(APIView):
@@ -126,6 +67,7 @@ class UserRegistrationView(APIView):
             current_user.user_type = "user"
             current_user.save()
             EmailVerifyFunc(current_user, domain_name)
+            
             return Response({"message": "Registration Successfully Verify link Send to Your Email"})
         else:
             try:
@@ -134,7 +76,6 @@ class UserRegistrationView(APIView):
                     if current_user.is_active:
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     else:
-                        
                         EmailVerifyFunc(current_user, domain_name)
                         current_user.delete()
                         n_serializer = MyUserSerializers(data=request.data)

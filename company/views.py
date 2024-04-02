@@ -74,9 +74,9 @@ class CompanyRegistrationView(APIView):
                         if c_serializer.is_valid():
                             c_serializer.save()
                             current_user = InternUser.objects.get(Q(email = request.data["email"]) | Q(phone = request.data["phone"]))
-                            new_user.user_type = "company"
-                            new_user.save()
-                            EmailVerifyFunc(new_user, domain_name)
+                            current_user.user_type = "company"
+                            current_user.save()
+                            EmailVerifyFunc(current_user, domain_name)
                             return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)
                         else:
                             return Response(c_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
