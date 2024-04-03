@@ -31,8 +31,6 @@ from intern_experience.serializers import InternExperienceGetSerializer
 import datetime
 from dateutil import tz
 import time
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
 
 def EmailVerifyFunc(current_user, domain_name):
     try:
