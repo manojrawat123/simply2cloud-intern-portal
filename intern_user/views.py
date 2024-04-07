@@ -1,4 +1,4 @@
-from django.core.mail import EmailMessage
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Q
@@ -37,11 +37,60 @@ def EmailVerifyFunc(current_user, domain_name):
         userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
         token = default_token_generator.make_token(current_user)
         message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
-        email_sender = EmailMessage("Intern Monster Verification Email", message, 'simply2cloud@gmail.com',[current_user.email])
+        html_content = f'''
+                          <html>
+<head>
+    <style>
+        body {{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }}
+        .container {{
+         
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }}
+        h3 {{
+            color: #333333;
+        }}
+        p {{
+            color: #666666;
+        }}
+        a {{
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+        }}
+        a:hover {{
+            background-color: #0056b3;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>Dear Intern,</h3>
+        <p>Please click on the below link to verify your email</p>
+        <p><a href="{message}" style="color: #ffffff;">Click To Verify</a></p>
+        <p>Thanks & Regards,</p>
+        <p>Customer Care</p>
+        <p>Intern Monster</p>
+    </div>
+</body>
+</html>'''
+        email_sender = EmailMultiAlternatives("Intern Monster Verification Email", ""
+    , 'simply2cloud@gmail.com' , [current_user.email])
+        email_sender.attach_alternative(html_content, "text/html")
         email_sender.send()
     except Exception as e:
         print(e)
-        email_sender = EmailMessage("Error In Intern Monster", f"{e}", 'positive.mind.123456789@gmail.com', ['positive.mind.123456789@gmail.com'])
+        email_sender = send_mail("Error In Intern Monster", f"{e}", 'positive.mind.123456789@gmail.com', ['positive.mind.123456789@gmail.com'])
         email_sender.send()
 
 def get_token_for_user(user):

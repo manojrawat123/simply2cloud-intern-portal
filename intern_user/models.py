@@ -22,8 +22,8 @@ class InternUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, name, phone , s2c_certified ,  password=None, password2= None):
-        """
-        Creates and saves a superuser with the given email, name, and phone.
+        """        
+        Creates and saves a superuser with the given email, name, and phone. 
         """
         if password == password2:
             raise ValueError("Password Did't match")
