@@ -34,6 +34,7 @@ import time
 
 def EmailVerifyFunc(current_user, domain_name):
     try:
+        print("Hiii")
         userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
         token = default_token_generator.make_token(current_user)
         message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
@@ -123,12 +124,12 @@ class UserRegistrationView(APIView):
                     if current_user.is_active:
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     else:
-                        EmailVerifyFunc(current_user, domain_name)
                         current_user.delete()
                         n_serializer = MyUserSerializers(data=request.data)
                         if n_serializer.is_valid():
                             n_serializer.save()
                             new_user = InternUser.objects.get(Q(email = email))
+                            EmailVerifyFunc(new_user, domain_name)
                             new_user.user_type = "user"
                             new_user.save()
                             return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)
@@ -146,6 +147,7 @@ class VerifybyEmail(APIView):
         try:
             activate = request.data.get("activate")
             pk = urlsafe_base64_decode(userid_encode)
+            print(pk)
             user = InternUser.objects.get(pk= pk)
             if default_token_generator.check_token(user,token):
                 user.is_active = activate
