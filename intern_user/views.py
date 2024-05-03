@@ -31,10 +31,11 @@ from intern_experience.serializers import InternExperienceGetSerializer
 import datetime
 from dateutil import tz
 import time
+from django.utils import timezone
+from datetime import timedelta
 
 def EmailVerifyFunc(current_user, domain_name):
     try:
-        print("Hiii")
         userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
         token = default_token_generator.make_token(current_user)
         message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
@@ -215,6 +216,10 @@ class MyProfile(APIView):
                 available_skill = AvailableSkill.objects.exclude(id__in=skill_ids)
                 available_skill_serializer = AvailableSkillSerializer(available_skill, many=True)
 
+                # All Skills
+                all_avaliable_skills = AvailableSkill.objects.all()
+                all_available_skill_serializer = AvailableSkillSerializer(all_avaliable_skills, many=True)
+
                 # Intern User Job Profile
                 intern_job_profile = InternJobProfile.objects.filter(intern = request.user.id)
                 intern_job_profile_serializers = InternAuthenticatedCompanyProfileCompanyViewSerializer(intern_job_profile, many=True)
@@ -239,6 +244,7 @@ class MyProfile(APIView):
                     "available_sub_categoery" : subcategoery_serializer.data,
                     "avaiable_skill" : available_skill_serializer.data,
                     "experience_details" : user_experience_serializer.data,
+                    "all_available_skill" : all_available_skill_serializer.data 
                     }, status=status.HTTP_200_OK)  
             elif (request.user.user_type == "company"):
                 try:

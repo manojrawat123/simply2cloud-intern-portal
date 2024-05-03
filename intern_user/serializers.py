@@ -40,8 +40,6 @@ class MyUserLoginSerializer(serializers.ModelSerializer):
         return data
     
 
-
-
 class UserProfileSerializer(serializers.ModelSerializer):
   class Meta:
     model = InternUser
@@ -52,7 +50,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class InternUserDetailCompanyViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = InternUser
-        fields = ["id","name"]
+        fields = ["id","name", "address"]
 
 class InternAuthCompanyUserViewSerializer(serializers.ModelSerializer):
     class Meta:
