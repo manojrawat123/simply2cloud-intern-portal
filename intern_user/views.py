@@ -87,7 +87,7 @@ def EmailVerifyFunc(current_user, domain_name):
 </body>
 </html>'''
         email_sender = EmailMultiAlternatives("Intern Monster Verification Email", ""
-    , 'simply2cloud@gmail.com' , [current_user.email])
+    , 'otp@simply2cloud.com' , [current_user.email])
         email_sender.attach_alternative(html_content, "text/html")
         email_sender.send()
     except Exception as e:
