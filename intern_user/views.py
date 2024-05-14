@@ -30,9 +30,11 @@ from intern_experience.models import JobExperience
 from intern_experience.serializers import InternExperienceGetSerializer
 import datetime
 from dateutil import tz
+from django.db.models import Sum
 import time
 from django.utils import timezone
 from datetime import timedelta
+from conversional.models import Conversation
 
 def EmailVerifyFunc(current_user, domain_name):
     try:
@@ -235,7 +237,8 @@ class MyProfile(APIView):
                 # Experience Details
                 user_experience_data = JobExperience.objects.filter(user = request.user.id)
                 user_experience_serializer = InternExperienceGetSerializer(user_experience_data, many= True)
-                
+
+                unread_message = Conversation.objects.filter(receiver= request.user.id).aggregate(total_unread=Sum('unread_message_count'))['total_unread']                
                 return Response({
                     "user_details": user_serializer.data, 
                     "skills_detail": skills_serializer.data,

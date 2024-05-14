@@ -49,7 +49,10 @@ class InternJobUnAuthCompanyViewSearch(APIView):
     def get(self, request, id = None):
         # Intern User Job Profile
         if(id is not None):
-            intern_job_profile = InternJobProfile.objects.get(id = id)
+            try:
+                intern_job_profile = InternJobProfile.objects.get(id = id)
+            except:
+                return Response({"error" : "Not Found"}, status=status.HTTP_404_NOT_FOUND)
             intern_job_profile_serializers = InternUserJobProfileForCompanViewSerializer(intern_job_profile)
             # intern Experience Details
             user_id = intern_job_profile.intern.id

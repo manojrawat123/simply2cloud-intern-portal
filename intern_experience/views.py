@@ -11,7 +11,6 @@ class InternExperienceView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request, id = None):
         if (request.user.user_type == "user"):
-             
             intern_job_experience = InternExperienceSerializer(data=request.data)
             try:
                 if intern_job_experience.is_valid():

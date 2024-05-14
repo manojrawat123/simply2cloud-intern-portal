@@ -31,6 +31,8 @@ class JobPostView(APIView):
             else:
                 if(request.user.user_type == "user"):
                     applied_job_ids = JobApplication.objects.filter(user =request.user.id).values_list('job', flat=True)
+                    print("----34-----")
+                    print(applied_job_ids)
                     job_data = Job.objects.filter(~Q(id__in=applied_job_ids))
                     job_serializer = JobGetSerializer(job_data, many=True)
                     
@@ -159,7 +161,36 @@ class JobSearchView(APIView):
                 param_value = request.query_params.get(param)
                 if param_value is not None:
                     filters[param] = param_value
-            job_data = Job.objects.filter(**filters) if filters else Job.objects.all()
+
+            applied_job_ids = JobApplication.objects.filter(user = request.user.id).values_list('job', flat=True)
+            print("---163---")
+            print(applied_job_ids)
+            job_not_applied = Job.objects.filter(~Q(id__in=applied_job_ids))
+            job_data = job_not_applied.filter(**filters) if filters else job_not_applied
+            job_serializer = JobGetSerializer(job_data, many=True)
+            
+            return Response(job_serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": "Internal Server Error"}, status= status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class JobAuthSearchView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request, id = None):
+        try:
+            # Define the available query parameters
+            query_params = ['location', 'job_title', 'job_categoery', 'sub_categoery']
+            # Create a dictionary to store the filters  
+            filters = {}
+            # Iterate through the query parameters and add filters if they exist
+            for param in query_params:
+                param_value = request.query_params.get(param)
+                if param_value is not None:
+                    filters[param] = param_value
+            applied_job_ids = JobApplication.objects.filter(user = request.user.id).values_list('job', flat=True)
+            job_not_applied = Job.objects.filter(~Q(id__in=applied_job_ids))
+            print(filters)
+            job_data = job_not_applied.filter(**filters) if filters else job_not_applied
             job_serializer = JobGetSerializer(job_data, many=True)
             
             return Response(job_serializer.data, status=status.HTTP_200_OK)
