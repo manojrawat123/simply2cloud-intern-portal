@@ -36,14 +36,8 @@ class CompanyRegistrationView(APIView):
             "password": request.data["password"],
             "password2" : request.data["password2"]
           }
-        serializer = MyCompanyUserSerializers(data=user_data)
-        if serializer.is_valid():
-            data = serializer.save()
-            current_user = InternUser.objects.get(email=request.data["email"])
-            current_user.user_type = "company"
-            current_user.save() 
-            id = current_user.id
-            company_data = {
+        
+        company_data = {
             "email": request.data["email"],
             "company_name": request.data["companyName"],
             "phone_number": request.data["phone"],
@@ -52,18 +46,30 @@ class CompanyRegistrationView(APIView):
             "website" : request.data["website"],
             "industry" : request.data["industry"],
             "founded_date" : request.data["founded_date"],
-            "company_user" : id,
+            "logo" : request.data["logo"]
         }
+        serializer = MyCompanyUserSerializers(data=user_data)
+        if serializer.is_valid():
+            print("debug")
+            data = serializer.save()
+            current_user = InternUser.objects.get(email=request.data["email"])
+            current_user.user_type = "company"
+            current_user.save() 
+            company_data["company_user"] = current_user.id  
             company_serializer = MyCompanySerializer(data=company_data)
             if company_serializer.is_valid():
+                print("debug_company")
                 company_serializer.save()
                 EmailVerifyFunc(current_user, domain_name)
+                print("Hiii")
+                return Response({"msg": "Registration Sucessfully"})
+                
             else:
                 current_user.delete()
                 return Response(company_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response({"msg": "Registration Sucessfully"})
         else:
             try:
+                
                 current_user = InternUser.objects.get(Q(email = request.data["email"]))
                 if current_user is not None:
                     if current_user.is_active:
@@ -76,11 +82,18 @@ class CompanyRegistrationView(APIView):
                             current_user = InternUser.objects.get(Q(email = request.data["email"]) | Q(phone = request.data["phone"]))
                             current_user.user_type = "company"
                             current_user.save()
-                            EmailVerifyFunc(current_user, domain_name)
-                            return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)
+                            company_data["company_user"] = current_user.id
+                            company_serializer = MyCompanySerializer(data=company_data)
+                            if company_serializer.is_valid():
+                                company_serializer.save()
+                                EmailVerifyFunc(current_user, domain_name)
+                                return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)   
+                            else:
+                                current_user.delete()
+                                return Response(company_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                         else:
                             return Response(c_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                    # return Response({"message": "Registration Successfully Verify link Send to Your Email"})
+                    # return Response({"message": "R/egistration Successfully Verify link Send to Your Email"})
                 else:
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
