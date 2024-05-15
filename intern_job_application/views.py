@@ -23,6 +23,7 @@ class InternJobApplicationView(APIView):
                 else:
                     intern_applied_jobs = JobApplication.objects.filter(Q(company_user = request.user) & Q(status=status_params))
                 intern_job_apply_serializer =InternJobApplyGetSerializer(intern_applied_jobs, many=True)
+                
                 return Response(intern_job_apply_serializer.data, status=status.HTTP_200_OK) 
             else:
                 return Response({"error": "method not allowed"}, status=status.HTTP_400_BAD_REQUEST)
