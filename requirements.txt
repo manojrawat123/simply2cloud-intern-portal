@@ -43,4 +43,3 @@ wcwidth==0.2.8
 yarl==1.9.2
 zope.interface == 6.0
 sib_api_v3_sdk == 7.6.0
-channels==3.0.9
