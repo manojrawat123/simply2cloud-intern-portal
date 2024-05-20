@@ -48,7 +48,6 @@ pytz==2021.3
 redis==5.0.1
 requests==2.31.0
 rsa==4.9
-sib-api-v3-sdk==7.6.0
 six==1.16.0
 soupsieve==2.5
 sqlparse==0.4.2
