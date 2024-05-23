@@ -3,13 +3,14 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated 
 from rest_framework.response import Response
 from rest_framework import status
-from django.db.models import Q
+from django.db.models import Q, Count
 from intern_profile_job.serializers import InternJobProfileSerializer
 from intern_profile_job.models import InternJobProfile
 from intern_profile_job.serializers import InternJobProfileSerializer, InternUserJobProfileForCompanViewSerializer,InternAuthenticatedCompanyProfileCompanyViewSerializer
 from intern_experience.models import JobExperience
 from intern_experience.serializers import InternExperienceGetSerializer
 from rest_framework.exceptions import ValidationError
+from intern_profile_job.profileAlgo import filterGoodProfiles
 
 class InternJobProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -45,6 +46,8 @@ class InternJobProfileView(APIView):
                 return Response({"Internal Server Error"} , status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+
+
 class InternJobUnAuthCompanyViewSearch(APIView):
     def get(self, request, id = None):
         # Intern User Job Profile
@@ -58,21 +61,29 @@ class InternJobUnAuthCompanyViewSearch(APIView):
             user_id = intern_job_profile.intern.id
             user_experience_data = JobExperience.objects.filter(user = user_id)
             user_experience_serializer = InternExperienceGetSerializer(user_experience_data, many= True)
+            
             return Response({"profile_details" : intern_job_profile_serializers.data, 
-                                    "experience_details" : user_experience_serializer.data}, status=status.HTTP_200_OK)
+                                    "experience_details" : user_experience_serializer.data,
+                            }, status=status.HTTP_200_OK)
         else:
             categoery_id = request.query_params.get("categoery")
             skills_id = request.query_params.get('skills')
             sub_cat_id = request.query_params.get('sub_categoery')
+            annotated_profiles = InternJobProfile.objects.annotate(
+                experience_count=Count('experience'),
+                skills_count=Count('skills')
+            )
+            job_profile_with_exp_skil = annotated_profiles.filter(Q(experience_count__gt=0) & Q(skills_count__gt=0))
             if (categoery_id is not None):
-                intern_job_profile = InternJobProfile.objects.filter(job_categoery = categoery_id)
+                print("Hii")
+                intern_job_profile = job_profile_with_exp_skil.filter(job_categoery = categoery_id)
             elif (skills_id is not None):
-                print(skills_id)
-                intern_job_profile = InternJobProfile.objects.filter(available_skills__in=[skills_id]).distinct()
-                intern_job_profile = InternJobProfile.objects.filter(available_skills__in=[skills_id]).distinct()
+                intern_job_profile = job_profile_with_exp_skil.filter(available_skills__in=[skills_id]).distinct()
+                intern_job_profile = job_profile_with_exp_skil.filter(available_skills__in=[skills_id]).distinct()
             elif(sub_cat_id is not None):
-                intern_job_profile = InternJobProfile.objects.filter(sub_categoery = sub_cat_id)            
+                intern_job_profile = job_profile_with_exp_skil.filter(sub_categoery = sub_cat_id)
             intern_job_profile_serializers = InternUserJobProfileForCompanViewSerializer(intern_job_profile, many=True)
+            # filtered_profile = filterGoodProfiles(intern_job_profile_serializers.data) 
             return Response({"intern_job_profile" : intern_job_profile_serializers.data}, status=status.HTTP_200_OK)
         
 
@@ -84,7 +95,6 @@ class AuthCompanyUserSearchView(APIView):
             if(id is not None):
                 intern_job_profile = InternJobProfile.objects.get(id = id)
                 intern_job_profile_serializers = InternAuthenticatedCompanyProfileCompanyViewSerializer(intern_job_profile)
-
                 # intern Experience Details
                 user_id = intern_job_profile.intern.id
                 user_experience_data = JobExperience.objects.filter(user = user_id)
@@ -95,14 +105,19 @@ class AuthCompanyUserSearchView(APIView):
                 categoery_id = request.query_params.get("categoery")
                 skills_id = request.query_params.get('skills')
                 sub_cat_id = request.query_params.get('sub_categoery')
+                annotated_profiles = InternJobProfile.objects.annotate(
+                experience_count=Count('experience'),
+                skills_count=Count('skills')
+            )
+                job_profile_with_exp_skil = annotated_profiles.filter(Q(experience_count__gt=0) & Q(skills_count__gt=0))
                 if (categoery_id is not None):
-                    intern_job_profile = InternJobProfile.objects.filter(job_categoery = categoery_id)
+                    intern_job_profile = job_profile_with_exp_skil.filter(job_categoery = categoery_id)
                 elif (skills_id is not None):
                     print(skills_id)
-                    intern_job_profile = InternJobProfile.objects.filter(available_skills__in=[skills_id]).distinct()
-                    intern_job_profile = InternJobProfile.objects.filter(available_skills__in=[skills_id]).distinct()
+                    intern_job_profile = job_profile_with_exp_skil.filter(available_skills__in=[skills_id]).distinct()
+                    intern_job_profile = job_profile_with_exp_skil.filter(available_skills__in=[skills_id]).distinct()
                 elif(sub_cat_id is not None):
-                    intern_job_profile = InternJobProfile.objects.filter(sub_categoery = sub_cat_id)            
+                    intern_job_profile = job_profile_with_exp_skil.filter(sub_categoery = sub_cat_id)            
                 intern_job_profile_serializers = InternAuthenticatedCompanyProfileCompanyViewSerializer(intern_job_profile, many=True)
                 return Response({"intern_job_profile" : intern_job_profile_serializers.data}, status=status.HTTP_200_OK)
         else:

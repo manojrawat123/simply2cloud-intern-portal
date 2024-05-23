@@ -14,6 +14,5 @@ class JobExperience(models.Model):
     skills_accuired = models.ManyToManyField(AvailableSkill)
     end_date = models.DateField(null=True, blank=True)
     desc = models.TextField()
-
     def __str__(self):
         return f"{self.user.email}"

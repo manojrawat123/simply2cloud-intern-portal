@@ -5,6 +5,7 @@ from job_categoery.serializer import AvailableJobCategoerySerializer
 from sub_categoery.serializer import SubCategoerySerializer
 from intern_user.serializers import InternUserDetailCompanyViewSerializer , InternAuthCompanyUserViewSerializer
 from skills.serializer import SkillsSerializer
+from intern_experience.serializers import InternExperienceGetSerializer
 
 
 class InternJobProfileSerializer(serializers.ModelSerializer):
@@ -18,8 +19,8 @@ class InternJobProfileGetSerializer(serializers.ModelSerializer):
         model = InternJobProfile
         fields = "__all__"
 
-
 class InternUserJobProfileForCompanViewSerializer(serializers.ModelSerializer):
+    experience = InternExperienceGetSerializer(many=True)
     job_categoery = AvailableJobCategoerySerializer()
     intern = InternUserDetailCompanyViewSerializer()
     skills = SkillsSerializer(many=True)
@@ -29,6 +30,7 @@ class InternUserJobProfileForCompanViewSerializer(serializers.ModelSerializer):
         exclude = ['portfolio_link', 'linkedin_profile']
 
 class InternAuthenticatedCompanyProfileCompanyViewSerializer(serializers.ModelSerializer):
+    experience = InternExperienceGetSerializer(many=True)
     job_categoery = AvailableJobCategoerySerializer()
     sub_categoery = SubCategoerySerializer()
     intern = InternAuthCompanyUserViewSerializer()

@@ -5,6 +5,7 @@ from rest_framework import status
 from django.db.models import Q
 from intern_experience.serializers import InternExperienceSerializer
 from intern_experience.models import JobExperience
+from intern_profile_job.models import InternJobProfile
 
 # Create your views here.
 class InternExperienceView(APIView):
@@ -14,7 +15,13 @@ class InternExperienceView(APIView):
             intern_job_experience = InternExperienceSerializer(data=request.data)
             try:
                 if intern_job_experience.is_valid():
-                    intern_job_experience.save()
+                    saved_experience = intern_job_experience.save()
+                    try:
+                        user_profile = InternJobProfile.objects.get(intern = intern_job_experience.validated_data["user"].id)
+                        user_profile.experience.add(saved_experience)
+                        user_profile.save()
+                    except Exception as e:
+                        print("error")
                     return Response({"message": "Profile Added Sucessfully"}, status=status.HTTP_201_CREATED)
                 else:
                     return Response(intern_job_experience.errors , status=status.HTTP_400_BAD_REQUEST)
