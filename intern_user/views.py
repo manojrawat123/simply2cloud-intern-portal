@@ -79,7 +79,7 @@ def EmailVerifyFunc(current_user, domain_name):
 </head>
 <body>
     <div class="container">
-        <h3>Dear Intern,</h3>
+        <h3>Hii,</h3>
         <p>Please click on the below link to verify your email</p>
         <p><a href="{message}" style="color: #ffffff;">Click To Verify</a></p>
         <p>Thanks & Regards,</p>
@@ -117,10 +117,10 @@ class UserRegistrationView(APIView):
             current_user = InternUser.objects.get(email = email)
             current_user.user_location = request.data.get("user_location")
             current_user.user_type = "user"
-            current_user.is_active = False
+            # current_user.is_active = False
             current_user.save()
             EmailVerifyFunc(current_user, domain_name)
-            return Response({"message": "Registration Successfully Verify link Send to Your Email"})
+            return Response({"message": "Registration Successfully Verify link Send to Your Email!"})
         else:
             try:
                 current_user = InternUser.objects.get(Q(email = email) | Q(phone = phone))

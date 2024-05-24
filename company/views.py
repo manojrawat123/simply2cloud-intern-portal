@@ -26,6 +26,17 @@ class CompanyRegistrationView(APIView):
     renderer_classes = [CompanyRender]
     def post(self, request, format=None):
         domain_name = request.data.get("url")
+        common_company_data = {
+            "email": request.data["email"],
+            "company_name": request.data["companyName"],
+            "phone_number": request.data["phone"],
+            "headquaters" : request.data["location"],
+            "address" : request.data["location"],
+            "website" : request.data["website"],
+            "industry" : request.data["industry"],
+            "founded_date" : request.data["founded_date"],
+            "logo" : request.data["logo"],
+        }
         user_data = {
             "email": request.data["email"],
             "name": request.data["companyName"],
@@ -44,14 +55,7 @@ class CompanyRegistrationView(APIView):
             current_user.save() 
             id = current_user.id
             company_data = {
-            "email": request.data["email"],
-            "company_name": request.data["companyName"],
-            "phone_number": request.data["phone"],
-            "headquaters" : request.data["location"],
-            "address" : request.data["location"],
-            "website" : request.data["website"],
-            "industry" : request.data["industry"],
-            "founded_date" : request.data["founded_date"],
+            **common_company_data,
             "company_user" : id,
         }
             company_serializer = MyCompanySerializer(data=company_data)
@@ -73,12 +77,25 @@ class CompanyRegistrationView(APIView):
                         c_serializer = MyCompanyUserSerializers(data=user_data)
                         if c_serializer.is_valid():
                             c_serializer.save()
+                            
                             current_user = InternUser.objects.get(Q(email = request.data["email"]) | Q(phone = request.data["phone"]))
                             current_user.user_type = "company"
+                            company_data = {
+                                **common_company_data,
+                                "company_user" : current_user.id,
+                            }
+                            company_serializer = MyCompanySerializer(data=company_data)
+                            if company_serializer.is_valid:
+                                company_serializer.save()
+                            else:
+                                current_user.delete()
+                                return Response(company_serializer.data, status=status.HTTP_400_BAD_REQUEST)
+
                             current_user.save()
                             EmailVerifyFunc(current_user, domain_name)
                             return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)
                         else:
+
                             return Response(c_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
                     # return Response({"message": "Registration Successfully Verify link Send to Your Email"})
                 else:

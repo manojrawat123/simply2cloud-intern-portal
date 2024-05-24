@@ -163,8 +163,6 @@ class JobSearchView(APIView):
                     filters[param] = param_value
 
             applied_job_ids = JobApplication.objects.filter(user = request.user.id).values_list('job', flat=True)
-            print("---163---")
-            print(applied_job_ids)
             job_not_applied = Job.objects.filter(~Q(id__in=applied_job_ids))
             job_data = job_not_applied.filter(**filters) if filters else job_not_applied
             job_serializer = JobGetSerializer(job_data, many=True)
