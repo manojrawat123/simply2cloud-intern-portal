@@ -117,7 +117,7 @@ class UserRegistrationView(APIView):
             current_user = InternUser.objects.get(email = email)
             current_user.user_location = request.data.get("user_location")
             current_user.user_type = "user"
-            current_user.is_active = True
+            current_user.is_active = False
             current_user.save()
             EmailVerifyFunc(current_user, domain_name)
             return Response({"message": "Registration Successfully Verify link Send to Your Email"})
