@@ -35,67 +35,37 @@ import time
 from django.utils import timezone
 from datetime import timedelta
 from conversional.models import Conversation
+from intern_user.htmlcontent import emailVerifyContent
+from intern_user.ForgotEmailSenderFunc import sendPasswordResetEmail
+from django.contrib.auth.hashers import make_password
 
-def EmailVerifyFunc(current_user, domain_name):
+
+def EmailSenderFunc(current_user, domain_name):
     try:
         userid_encode = urlsafe_base64_encode(force_bytes(current_user.pk))
         token = default_token_generator.make_token(current_user)
         message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
-        html_content = f'''
-                          <html>
-<head>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }}
-        .container {{
-         
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }}
-        h3 {{
-            color: #333333;
-        }}
-        p {{
-            color: #666666;
-        }}
-        a {{
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #ffffff;
-            text-decoration: none;
-            border-radius: 5px;
-        }}
-        a:hover {{
-            background-color: #0056b3;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h3>Hii,</h3>
-        <p>Please click on the below link to verify your email</p>
-        <p><a href="{message}" style="color: #ffffff;">Click To Verify</a></p>
-        <p>Thanks & Regards,</p>
-        <p>Customer Care</p>
-        <p>Intern Monster</p>
-    </div>
-</body>
-</html>'''
-        email_sender = EmailMultiAlternatives("Intern Monster Verification Email", ""
-    , 'otp@simply2cloud.com' , [current_user.email])
+        html_content = emailVerifyContent(message)
+        email_sender = EmailMultiAlternatives("Intern Monster Verification Email", "", 'otp@simply2cloud.com', [current_user.email])
         email_sender.attach_alternative(html_content, "text/html")
         email_sender.send()
     except Exception as e:
         print(e)
         email_sender = send_mail("Error In Intern Monster", f"{e}", 'positive.mind.123456789@gmail.com', ['positive.mind.123456789@gmail.com'])
         email_sender.send()
+
+class ForgotPassword(APIView):
+    def post(self , request, id = None):
+        try:
+            user = InternUser.objects.get(Q(email = request.data.get("email")) & Q(is_active = True))
+            domain_name = request.data.get('domain')
+            if user is None:
+                return Response({"error" : "Email Didn't exist"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                sendPasswordResetEmail(user, domain_name)
+                return Response({"message" : "Reset Password Link Send to your email"},status=status.HTTP_200_OK)
+        except Exception as e: 
+            return Response({"error" : f'{e}'}, status=status.HTTP_400_BAD_REQUEST)
 
 def get_token_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -119,7 +89,7 @@ class UserRegistrationView(APIView):
             current_user.user_type = "user"
             # current_user.is_active = False
             current_user.save()
-            EmailVerifyFunc(current_user, domain_name)
+            EmailSenderFunc(current_user, domain_name)
             return Response({"message": "Registration Successfully Verify link Send to Your Email!"})
         else:
             try:
@@ -133,7 +103,7 @@ class UserRegistrationView(APIView):
                         if n_serializer.is_valid():
                             n_serializer.save()
                             new_user = InternUser.objects.get(Q(email = email))
-                            EmailVerifyFunc(new_user, domain_name)
+                            EmailSenderFunc(new_user, domain_name)
                             new_user.user_type = "user"
                             new_user.save()
                             return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)
@@ -146,6 +116,29 @@ class UserRegistrationView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
+class ResetPassword(APIView):
+    def post(self , request, userid_encode = None,token = None):
+        try:
+            activate = request.data.get("activate")
+            password = request.data.get('password')
+            pk = urlsafe_base64_decode(userid_encode)
+            print(pk)
+            user = InternUser.objects.get(pk= pk)
+            if default_token_generator.check_token(user,token):
+                h_password = make_password(password)
+                print(h_password)
+                serializer = MyUserRegisterSerializer(user, data={"password" : h_password}, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response({"message": "Password Reset Successfully"}, status=status.HTTP_200_OK)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"error" : "Not Authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            print(e)
+            return Response({"error" : "Internal Server Error"}, status = status.HTTP_500_INTERNAL_SERVER_ERROR) 
+
 class VerifybyEmail(APIView):
     def post(self , request, userid_encode = None,token = None):
         try:
@@ -187,7 +180,7 @@ class MyLogin(APIView):
                             message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
                             # email = EmailMessage(mail_subject, message, 'simply2cloud@gmail.com',[email])
                             # email.send()
-                            EmailVerifyFunc(user_e, domain_name=domain_name)
+                            EmailSenderFunc(user_e, domain_name=domain_name)
                             return Response({"error" : "Verify Your Email"}, status=status.HTTP_401_UNAUTHORIZED)
                         else:
                             return Response({"error" : "Email Not Exists"}, status=status.HTTP_400_BAD_REQUEST) 
@@ -288,20 +281,16 @@ class MyProfile(APIView):
         except Exception as e:
             print(e)
             return Response({"error": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)      
-        
-    
 
     def put(self, request, id=None):
-        
         intern_user = InternUser.objects.get(id = request.user.id)
-        user_serializer = UserProfileSerializer(intern_user, data=request.data, partial = True)
+        user_serializer = MyUserRegisterSerializer(intern_user, data=request.data, partial = True)
         if user_serializer.is_valid():
             data = user_serializer.save()
             return Response({"message": "Data Updated Sucessfully"},status=status.HTTP_200_OK)
         else:
             return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-
 class UnAutProfView(APIView):
     def get(self, request, id=None):
         # Available Job Categoeries

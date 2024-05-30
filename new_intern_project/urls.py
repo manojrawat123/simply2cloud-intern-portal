@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from intern_user.views import MyLogin,UserRegistrationView, MyProfile,UnAutProfView,VerifybyEmail
+from intern_user.views import MyLogin,UserRegistrationView, MyProfile,UnAutProfView,VerifybyEmail, ForgotPassword, ResetPassword
 from skills.views import MySkills
 from company.views import CompanyRegistrationView
 from available_skills.views import PostJobView
@@ -29,21 +29,22 @@ from message.views import MessageView
 from conversional.views import ConversitionalView
 
 urlpatterns = [
+
     path('admin/', admin.site.urls),
     path("login/", MyLogin.as_view(), name="login"),
     path("register/", UserRegistrationView.as_view(), name="register"),
     path('profile/', MyProfile.as_view(), name="profile" ),
     path('accounts/activate/<userid_encode>/<token>/', VerifybyEmail.as_view(), name="verify email"),
+    path('reset-password/<userid_encode>/<token>/', ResetPassword.as_view(), name="Reset Password"),
+    path('forgetpassword/', ForgotPassword.as_view(), name="forgot password email"),
 
     # Un Authorize 
     path('home-unauth/', UnAutProfView.as_view(), name="home-un-auth-view"),
     path('intern-unauth-search/', InternJobUnAuthCompanyViewSearch.as_view(), name="home-un-auth-view"),
     path('intern-unauth-search/<int:id>/', InternJobUnAuthCompanyViewSearch.as_view(), name="home-un-auth-view-id"),
     path('job-unauth-search/', JobsUnAuthGetView.as_view(), name="home-un-auth-view"),    
-
     path('intern-auth-search/', AuthCompanyUserSearchView.as_view(), name="home-un-auth-view"),
     path('intern-auth-search/<int:id>/', AuthCompanyUserSearchView.as_view(), name="home-un-auth-view-id"),
-
     path("company_register/",CompanyRegistrationView.as_view(), name="company-register-view"),
     path('skills/', MySkills.as_view(), name="skills" ),
     path('skills/<int:id>/', MySkills.as_view(), name="skills-by-id" ),

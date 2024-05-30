@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from company.renders import CompanyRender
 from company.serializers import MyCompanyUserSerializers, MyCompanySerializer
 from intern_user.models import InternUser
-from intern_user.views import EmailVerifyFunc
+from intern_user.views import EmailSenderFunc
 from django.db.models import Q
 
 
@@ -61,7 +61,7 @@ class CompanyRegistrationView(APIView):
             company_serializer = MyCompanySerializer(data=company_data)
             if company_serializer.is_valid():
                 company_serializer.save()
-                EmailVerifyFunc(current_user, domain_name)
+                EmailSenderFunc(current_user, domain_name)
             else:
                 current_user.delete()
                 return Response(company_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -92,7 +92,7 @@ class CompanyRegistrationView(APIView):
                                 return Response(company_serializer.data, status=status.HTTP_400_BAD_REQUEST)
 
                             current_user.save()
-                            EmailVerifyFunc(current_user, domain_name)
+                            EmailSenderFunc(current_user, domain_name)
                             return Response({"message": "Registration Successfully Verify link Send to Your Email"}, status=status.HTTP_200_OK)
                         else:
 

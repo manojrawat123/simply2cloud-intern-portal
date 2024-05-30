@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from intern_user.models import InternUser
+from django.contrib.auth.hashers import make_password
 
 class MyUserSerializers(serializers.ModelSerializer):
     password2 = serializers.CharField(style={"input_type":"password"}, write_only = True)
@@ -20,6 +21,13 @@ class MyUserSerializers(serializers.ModelSerializer):
     def create(self, validate_data):
         validate_data.pop('password2')
         return InternUser.objects.create_user(**validate_data)
+    
+    def update(self, instance, validated_data):
+        password = validated_data.get('password')
+        if password:
+            instance.password = make_password(password)
+        instance.save()
+        return instance
 
 class MyUserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
