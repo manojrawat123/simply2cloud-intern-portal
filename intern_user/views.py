@@ -170,11 +170,13 @@ class MyLogin(APIView):
                     return Response({'token': token,"user_type": user.user_type, 'msg': "User Login Sucessfully"})
                 else:
                     try:
-                        user_e = InternUser.objects.get(email = email)
+                        user_e = InternUser.objects.get(Q(email = email))
+                        if user_e.is_active:
+                            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
                         if (user_e):
                             email = request.data.get("email")
                             domain_name = request.data.get("url")
-                            mail_subject = "Please activate account" 
+                            mail_subject = "Please activate account"
                             userid_encode = urlsafe_base64_encode(force_bytes(user_e.pk))
                             token = default_token_generator.make_token(user_e)
                             message = f'{domain_name}/accounts/activate/{userid_encode}/{token}'
@@ -186,10 +188,9 @@ class MyLogin(APIView):
                             return Response({"error" : "Email Not Exists"}, status=status.HTTP_400_BAD_REQUEST) 
                     except Exception as e:
                         return Response({"error" : "Email Not Exists"}, status=status.HTTP_400_BAD_REQUEST)     
-        
                     # Response({ "error": "Invalid Data" }, status=status.HTTP_401_UNAUTHORIZED)
             else:
-                Response({"error": "Please data In Correct Foramt"}, status=status.HTTP_400_BAD_REQUEST)
+                Response({"error": "Invalid Info!"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error" : "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
